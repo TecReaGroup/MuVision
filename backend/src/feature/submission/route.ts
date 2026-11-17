@@ -2,17 +2,34 @@ import type { FastifyInstance } from 'fastify'
 import { HttpError } from '../../shared/httpError'
 import { NAME_FIELD_SCHEMA } from '../../shared/schema'
 import type { SubmissionJob, SubmissionQueue } from './submissionQueue'
-import { fetchYouTubePreview, requireYouTubeId, type YouTubePreview } from './youtube'
+import { fetchThumbnail, fetchYouTubePreview, requireYouTubeId, type YouTubePreview } from './youtube'
 
 type PreviewRoute = { Querystring: { url: string } }
 type SubmitRoute = { Body: { url: string; title: string; creator: string; album: string } }
 type JobRoute = { Params: { jobId: string } }
+type ThumbnailRoute = { Params: { videoId: string } }
+
+const VIDEO_ID_PATTERN = '^[\w-]{11}$'
 
 export function registerSubmissionRoutes(app: FastifyInstance, queue: SubmissionQueue): void {
   app.get<PreviewRoute>(
     '/api/submission/preview',
     { schema: { querystring: { type: 'object', required: ['url'], properties: { url: { type: 'string' } } } } },
     async (request): Promise<YouTubePreview> => fetchYouTubePreview(requireYouTubeId(request.query.url)),
+  )
+
+  app.get<ThumbnailRoute>(
+    '/api/submission/thumbnail/:videoId',
+    {
+      schema: {
+        params: { type: 'object', properties: { videoId: { type: 'string', pattern: VIDEO_ID_PATTERN } } },
+      },
+    },
+    async (request, reply) => {
+      const thumbnail = await fetchThumbnail(request.params.videoId)
+      if (!thumbnail) throw new HttpError(404, `No thumbnail for ${request.params.videoId}`)
+      return reply.type(thumbnail.mediaType).send(Buffer.from(thumbnail.bytes))
+    },
   )
 
   app.post<SubmitRoute>(

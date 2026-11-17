@@ -11,7 +11,7 @@ import { createLogger } from '../../shared/log'
 import type { CreatorPhotoStore } from '../catalog/creatorPhoto'
 import type { VideoTagInput, VideoTagWriter } from '../catalog/videoTagWriter'
 import type { MetubeClient, MetubeDownload } from './metubeClient'
-import { canonicalWatchUrl, fetchChannelAvatarUrl, thumbnailUrls } from './youtube'
+import { canonicalWatchUrl, fetchChannelAvatarUrl, fetchThumbnail } from './youtube'
 
 const IMAGE_TIMEOUT_MS = 15_000
 
@@ -147,12 +147,10 @@ export class SubmissionQueue {
 
   /** Returns the saved cover path, or undefined when YouTube has no thumbnail; a missing cover is not fatal. */
   async #fetchCover(videoId: string, destination: string): Promise<string | undefined> {
-    for (const url of thumbnailUrls(videoId)) {
-      const response = await fetch(url, { signal: AbortSignal.timeout(IMAGE_TIMEOUT_MS) }).catch(() => undefined)
-      if (response?.ok) {
-        await writeFile(destination, Buffer.from(await response.arrayBuffer()))
-        return destination
-      }
+    const thumbnail = await fetchThumbnail(videoId)
+    if (thumbnail) {
+      await writeFile(destination, thumbnail.bytes)
+      return destination
     }
     log.warn(`No thumbnail found for ${videoId}; saving without cover`)
     return undefined

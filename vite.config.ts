@@ -9,7 +9,6 @@ const BACKEND_URL = 'http://127.0.0.1:8000'
 const proxy = { '/api': BACKEND_URL, '/media': BACKEND_URL }
 // Matches --color-canvas so the splash screen and status bar blend into the app
 const CANVAS_COLOR = '#f7f6f3'
-const GOOGLE_FONT_CACHE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
 // Oldest images are evicted past this count; covers and creator photos are a few hundred KB at most
 const MEDIA_IMAGE_CACHE_MAX_ENTRIES = 2000
 
@@ -58,17 +57,13 @@ const pwa = VitePWA({
         },
       },
       {
-        urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
-        handler: 'StaleWhileRevalidate',
-        options: { cacheName: 'google-font-stylesheet' },
-      },
-      {
-        urlPattern: ({ url }) => url.origin === 'https://fonts.gstatic.com',
+        // Self-hosted font files are fingerprinted build assets, but the CJK subsets are too many to precache:
+        // each one is cached the first time a page needs its glyphs
+        urlPattern: /\/assets\/.+\.woff2$/,
         handler: 'CacheFirst',
         options: {
-          cacheName: 'google-font-file',
-          expiration: { maxAgeSeconds: GOOGLE_FONT_CACHE_MAX_AGE_SECONDS },
-          cacheableResponse: { statuses: [0, 200] },
+          cacheName: 'font-file',
+          cacheableResponse: { statuses: [200] },
         },
       },
     ],

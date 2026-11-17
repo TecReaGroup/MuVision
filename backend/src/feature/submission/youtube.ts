@@ -5,6 +5,7 @@ import { HttpError } from '../../shared/httpError'
 const WATCH_DATA_URL = 'https://www.youtube.com/youtubei/v1/next?prettyPrint=false'
 const WATCH_DATA_CLIENT = { clientName: 'WEB', clientVersion: '2.20241101.00.00', hl: 'en' }
 const REQUEST_TIMEOUT_MS = 15_000
+const THUMBNAIL_TIMEOUT_MS = 15_000
 // Best first; maxresdefault is missing on older or low-resolution uploads
 const THUMBNAIL_NAMES = ['maxresdefault', 'sddefault', 'hqdefault']
 const AVATAR_SIZE_PX = 900
@@ -13,6 +14,7 @@ const AVATAR_SIZE_PX = 900
 const AVATAR_SIZE_PATTERN = /=s\d+-/
 
 export type YouTubePreview = { videoId: string; title: string; creator: string; thumbnail: string }
+export type YouTubeThumbnail = { bytes: Uint8Array; mediaType: string }
 type WatchDetails = { title: string; creator: string; avatarUrl: string | undefined }
 
 type TextRuns = { runs?: { text: string }[] }
@@ -55,8 +57,19 @@ export function parseYouTubeId(raw: string): string | null {
 /** Strips playlist and tracking params so MeTube downloads exactly one video. */
 export const canonicalWatchUrl = (videoId: string) => `https://www.youtube.com/watch?v=${videoId}`
 
-export const thumbnailUrls = (videoId: string) =>
-  THUMBNAIL_NAMES.map((name) => `https://i.ytimg.com/vi/${videoId}/${name}.jpg`)
+/** Best available thumbnail, or undefined when YouTube has none for this video. */
+export async function fetchThumbnail(videoId: string): Promise<YouTubeThumbnail | undefined> {
+  for (const name of THUMBNAIL_NAMES) {
+    const response = await fetch(`https://i.ytimg.com/vi/${videoId}/${name}.jpg`, {
+      signal: AbortSignal.timeout(THUMBNAIL_TIMEOUT_MS),
+    }).catch(() => undefined)
+    if (response?.ok) {
+      const mediaType = response.headers.get('content-type') ?? 'image/jpeg'
+      return { bytes: new Uint8Array(await response.arrayBuffer()), mediaType }
+    }
+  }
+  return undefined
+}
 
 export function requireYouTubeId(url: string): string {
   const videoId = parseYouTubeId(url)
@@ -87,7 +100,8 @@ async function fetchWatchDetails(videoId: string): Promise<WatchDetails> {
 
 export async function fetchYouTubePreview(videoId: string): Promise<YouTubePreview> {
   const { title, creator } = await fetchWatchDetails(videoId)
-  return { videoId, title, creator, thumbnail: thumbnailUrls(videoId).at(-1)! }
+  // Proxied through the server: the browser never contacts YouTube itself
+  return { videoId, title, creator, thumbnail: `/api/submission/thumbnail/${videoId}` }
 }
 
 /** Finds the avatar of the channel that uploaded the video, without needing a YouTube API key. */
