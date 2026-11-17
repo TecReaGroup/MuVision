@@ -12,6 +12,8 @@ export type VideoView = {
   albumId: string
   cover: string
   src: string
+  /** Same bytes as `src`, served as an attachment named after the title */
+  download: string
   durationSeconds: number
   /** Epoch ms */
   addedAt: number
@@ -33,6 +35,7 @@ export type VideoFileView = VideoProbe & {
 // Public and versioned: a retag changes the URL, so CDNs and browsers may cache these forever
 export const coverUrl = ({ id, version }: LibraryVideo) => `/media/video/${id}/${version}/cover`
 export const streamUrl = ({ id, version }: LibraryVideo) => `/media/video/${id}/${version}/stream`
+export const downloadUrl = ({ id, version }: LibraryVideo) => `/media/video/${id}/${version}/download`
 export const creatorPhotoUrl = (authorId: string, { version }: CreatorPhoto) => `/media/creator/${authorId}/${version}/photo`
 export const authorIdOf = (creator: string) => stableId('author', creator)
 
@@ -63,6 +66,7 @@ export function buildCatalog(videos: LibraryVideo[], photos: CreatorPhotoStore):
       albumId,
       cover: coverUrl(video),
       src: streamUrl(video),
+      download: downloadUrl(video),
       durationSeconds: tag.durationSeconds,
       addedAt,
     }

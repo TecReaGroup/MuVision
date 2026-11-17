@@ -92,7 +92,12 @@ export const GlobeIcon = ({ className }: IconProps) => (
     <path d="M3.5 12h17M12 3.5c2.4 2.3 3.6 5.1 3.6 8.5s-1.2 6.2-3.6 8.5c-2.4-2.3-3.6-5.1-3.6-8.5s1.2-6.2 3.6-8.5z" />
   </svg>
 )
-export const ChevronDownIcon = ({ className }: IconProps) => (
+export const DownloadIcon = ({ className }: IconProps) => (
+  <svg {...ICON_STROKE} className={className}>
+    <path d="M12 4v11m-5-5 5 5 5-5M5 20h14" />
+  </svg>
+)
+export const ChevronDownIcon =({ className }: IconProps) => (
   <svg {...ICON_STROKE} className={className}>
     <path d="m6 9.5 6 6 6-6" />
   </svg>

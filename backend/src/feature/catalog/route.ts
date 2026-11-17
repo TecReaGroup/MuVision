@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { extname } from 'node:path'
 import type { FastifyInstance } from 'fastify'
 import { IMMUTABLE_CACHE_CONTROL } from '../../shared/cacheControl'
 import { HttpError } from '../../shared/httpError'
@@ -21,6 +22,10 @@ type CreatorPhotoParams = { Params: { authorId: string; version: string } }
 type EditVideoRoute = VideoParams & { Body: VideoTagInput }
 
 const log = createLogger('catalog')
+
+// RFC 5987 filename*: UTF-8 titles survive, and encodeURIComponent leaves ' ( ) * ! which that grammar forbids
+const attachmentDisposition = (fileName: string) =>
+  `attachment; filename*=UTF-8''${encodeURIComponent(fileName).replace(/['()*!]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)}`
 
 /** Requires @fastify/static registered with `root` set to the library's video directory. */
 export function registerCatalogRoutes(
@@ -67,6 +72,17 @@ export function registerCatalogRoutes(
       .header('Cache-Control', IMMUTABLE_CACHE_CONTROL)
       .sendFile(requireVideoVersion(request.params).relativePath, { cacheControl: false }),
   )
+
+  // A server-side attachment rather than <a download>, which browsers ignore once media is served from a CDN origin.
+  // NOTE: not reply.download(): it ignores the registered root and 404s on Windows absolute paths
+  app.get<VideoVersionParams>('/media/video/:videoId/:version/download', (request, reply) => {
+    const video = requireVideoVersion(request.params)
+    const fileName = `${video.tag.title}${extname(video.relativePath)}`
+    return reply
+      .header('Cache-Control', IMMUTABLE_CACHE_CONTROL)
+      .header('Content-Disposition', attachmentDisposition(fileName))
+      .sendFile(video.relativePath, { cacheControl: false })
+  })
 
   app.get<VideoVersionParams>('/media/video/:videoId/:version/cover', async (request, reply) => {
     const cover = await readCover(requireVideoVersion(request.params).absolutePath)

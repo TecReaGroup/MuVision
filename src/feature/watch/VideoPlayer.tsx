@@ -2,8 +2,9 @@ import '@videojs/react/video/skin.css'
 import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { I18nProvider as PlayerI18nProvider, type Locale } from '@videojs/react/i18n'
-import { createPlayer, orientationLockFeature } from '@videojs/react'
+import { createPlayer, fullscreenFeature, orientationLockFeature } from '@videojs/react'
 import { Video, VideoSkin, videoFeatures } from '@videojs/react/video'
+import { metadataGatedFullscreenFeature } from './metadataGatedFullscreen'
 import type { Video as CatalogVideo } from '@/feature/catalog/catalog'
 import { useI18n } from '@/shared/i18n/I18nProvider'
 import type { Language } from '@/shared/i18n/locale'
@@ -12,7 +13,11 @@ import { ReplayIcon } from '@/shared/design/icon'
 const PLAYER_LOCALE: Record<Language, Locale> = { zh: 'zh-CN', en: 'en' }
 
 // Orientation lock rotates to landscape on entering fullscreen (Android); iOS offers no lock API and rotates on its own
-const { Player: MediaPlayer, usePlayer } = createPlayer({ features: [...videoFeatures, orientationLockFeature] })
+const PLAYER_FEATURES = [
+  ...videoFeatures.map((feature) => (feature === fullscreenFeature ? metadataGatedFullscreenFeature : feature)),
+  orientationLockFeature,
+]
+const { Player: MediaPlayer, usePlayer } = createPlayer({ features: PLAYER_FEATURES })
 
 /**
  * Video.js player; its skin owns controls, hotkeys, gestures and fullscreen, which locks to landscape.

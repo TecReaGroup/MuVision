@@ -2,7 +2,7 @@ import { patchJson, requestJson } from '@/shared/http/requestJson'
 
 const CATALOG_URL = '/api/catalog'
 // NOTE: bump a version whenever its shape changes, so an old snapshot is never rendered
-const CATALOG_SNAPSHOT_KEY = 'muvision-catalog-snapshot-v1'
+const CATALOG_SNAPSHOT_KEY = 'muvision-catalog-snapshot-v2'
 const VIDEO_FILE_SNAPSHOT_KEY = 'muvision-video-file-snapshot-v1'
 
 export type Author = { id: string; name: string; avatar: string }
@@ -14,11 +14,13 @@ export type Video = {
   albumId: string
   cover: string
   src: string
+  /** Same file as `src`, served as an attachment */
+  download: string
   durationSeconds: number
   /** Epoch ms */
   addedAt: number
 }
-export type Catalog = { authors: Author[]; albums: Album[]; videos: Video[] }
+export type Catalog= { authors: Author[]; albums: Album[]; videos: Video[] }
 /** One library file with its tags and encoding facts; a null field means the file has no such stream. */
 export type VideoFile = {
   id: string

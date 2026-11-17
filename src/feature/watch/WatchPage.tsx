@@ -3,7 +3,7 @@ import { motion } from 'motion/react'
 import type { Video } from '@/feature/catalog/catalog'
 import { useCatalog } from '@/feature/catalog/CatalogProvider'
 import { useI18n } from '@/shared/i18n/I18nProvider'
-import { ArrowLeftIcon, ArrowRightIcon } from '@/shared/design/icon'
+import { ArrowLeftIcon, ArrowRightIcon, DownloadIcon } from '@/shared/design/icon'
 import { EASE } from '@/shared/design/motion'
 import { VideoPlayer } from './VideoPlayer'
 import { PlaylistPanel } from './PlaylistPanel'
@@ -95,16 +95,29 @@ export default function WatchPage({ video, onBack, onPlay, onAuthor, onAlbum }: 
                   </span>
                 </span>
               </button>
-              <button
-                onClick={() => onAuthor(author.id)}
-                className="group flex shrink-0 items-center rounded-full bg-fill-strong/60 px-4 py-2 text-sm font-medium text-strong transition-colors duration-200 hover:bg-fill-strong hover:text-foreground sm:px-5 sm:py-2.5"
-              >
-                {t.viewProfile}
-                {/* Arrow reveals on hover/focus only */}
-                <span className="flex w-0 overflow-hidden opacity-0 transition-all duration-200 ease-out group-hover:ml-1.5 group-hover:w-4 group-hover:opacity-100 group-focus-visible:ml-1.5 group-focus-visible:w-4 group-focus-visible:opacity-100">
-                  <ArrowRightIcon className="h-4 w-4 shrink-0" />
-                </span>
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <a
+                  href={video.download}
+                  download
+                  aria-label={t.download}
+                  title={t.download}
+                  className="flex items-center gap-1.5 rounded-full bg-fill-strong/60 p-2 text-sm font-medium text-strong transition-colors duration-200 hover:bg-fill-strong hover:text-foreground sm:px-4 sm:py-2.5"
+                >
+                  <DownloadIcon className="h-5 w-5 shrink-0 sm:h-4 sm:w-4" />
+                  {/* Icon-only on phones, so both actions fit beside the creator */}
+                  <span className="hidden sm:inline">{t.download}</span>
+                </a>
+                <button
+                  onClick={() => onAuthor(author.id)}
+                  className="group flex shrink-0 items-center rounded-full bg-fill-strong/60 px-4 py-2 text-sm font-medium text-strong transition-colors duration-200 hover:bg-fill-strong hover:text-foreground sm:px-5 sm:py-2.5"
+                >
+                  {t.viewProfile}
+                  {/* Arrow reveals on hover/focus only */}
+                  <span className="flex w-0 overflow-hidden opacity-0 transition-all duration-200 ease-out group-hover:ml-1.5 group-hover:w-4 group-hover:opacity-100 group-focus-visible:ml-1.5 group-focus-visible:w-4 group-focus-visible:opacity-100">
+                    <ArrowRightIcon className="h-4 w-4 shrink-0" />
+                  </span>
+                </button>
+              </div>
             </div>
           </section>
         </motion.div>

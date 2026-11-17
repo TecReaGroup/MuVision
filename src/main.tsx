@@ -1,3 +1,6 @@
+// NOTE: must load before App so component CSS (e.g. Video.js skin's `video { height: 100% }`) overrides
+// Tailwind preflight's `video { height: auto }` within the shared `base` layer
+import './app/global.css'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './app/App'
@@ -6,7 +9,6 @@ import { I18nProvider } from './shared/i18n/I18nProvider'
 import { CatalogProvider } from './feature/catalog/CatalogProvider'
 import { AuthGate } from './feature/auth/AuthGate'
 import { keepAppUpToDate } from './feature/pwa/appUpdate'
-import './app/global.css'
 
 keepAppUpToDate()
 
