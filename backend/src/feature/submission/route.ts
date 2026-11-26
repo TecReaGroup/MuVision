@@ -9,7 +9,7 @@ type SubmitRoute = { Body: { url: string; title: string; creator: string; album:
 type JobRoute = { Params: { jobId: string } }
 type ThumbnailRoute = { Params: { videoId: string } }
 
-const VIDEO_ID_PATTERN = '^[\w-]{11}$'
+const VIDEO_ID_PATTERN = String.raw`^[\w-]{11}$`
 
 export function registerSubmissionRoutes(app: FastifyInstance, queue: SubmissionQueue): void {
   app.get<PreviewRoute>(
